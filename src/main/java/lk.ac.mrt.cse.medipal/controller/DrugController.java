@@ -195,7 +195,7 @@ public class DrugController {
 
         }
 
-
+    //Inserting the d-d interactions to the hash map
     public HashMap<String, List<Integer>> getSeverityValueFromDBForDrugToDruginteraction(HashMap<String, List<Integer>> scoreValue){
 
         String id = null;
@@ -212,7 +212,7 @@ public class DrugController {
 
                 drug_name1 = getDrugNameByID(resultSet.getInt("drug1_id"));
                 drug_name2 = getDrugNameByID(resultSet.getInt("drug2_id"));
-                id = drug_name1+"_"+drug_name2;
+                id = drug_name1 +"_"+ drug_name2;
                 if(scoreValue.containsKey(id)){
                     scoreValue.get(id).add(resultSet.getInt("severity"));
                 } else {
@@ -237,4 +237,59 @@ public class DrugController {
 
         return scoreValue;
     }
+
+
+    //Inserting the d-disease interactions to the hash map
+    public HashMap<String, List<Integer>> getSeverityValueFromDBForDrugToDiseaseinteraction(HashMap<String, List<Integer>> scoreValue){
+
+        String id = null;
+        String drug_name = null;
+        String disease_name = null;
+
+        try{
+            connection = DB_Connection.getDBConnection().getConnection();
+            String SQL_1 = "SELECT drug_id, disease_id, severity from d_di_interaction";
+            preparedStatement = connection.prepareStatement(SQL_1);
+            resultSet = preparedStatement.executeQuery();
+
+            while(resultSet.next()){
+
+                drug_name = getDrugNameByID(resultSet.getInt("drug_id"));
+
+                if (resultSet.getInt("disease_id") == 1)
+                    disease_name = "Diabetes";
+                else if (resultSet.getInt("disease_id") == 2)
+                    disease_name = "Hypertension";
+                else
+                    disease_name = "COPD";
+
+
+                id = drug_name +"_"+ disease_name;
+                if(scoreValue.containsKey(id)){
+                    scoreValue.get(id).add(resultSet.getInt("severity"));
+                } else {
+                    scoreValue.put(id, new ArrayList<Integer>());
+
+                }
+
+
+            }
+
+        }catch(SQLException | IOException | PropertyVetoException ex) {
+            LOGGER.error("Error getting category list", ex);
+        } finally {
+            try {
+                DbUtils.closeQuietly(resultSet);
+                DbUtils.closeQuietly(preparedStatement);
+                DbUtils.close(connection);
+            } catch (SQLException ex) {
+                LOGGER.error("Error closing sql connection", ex);
+            }
+        }
+
+        return scoreValue;
+    }
+
+
+
 }
